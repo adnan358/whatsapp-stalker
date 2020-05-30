@@ -1,8 +1,8 @@
 let paused = true;
-const alarm = new Audio(chrome.runtime.getURL("alarm.mp3"));
+// const alarm = new Audio(chrome.runtime.getURL("alarm.mp3"));
 
 const eventListener = event => {
-  if (event.which === 192 && event.ctrlKey && !event.shiftKey) {
+  if (event.which === 191 && event.ctrlKey && !event.shiftKey) {
     observe();
     paused = false;
     window.removeEventListener("keydown", eventListener);
@@ -11,14 +11,14 @@ const eventListener = event => {
 
 window.addEventListener("keydown", eventListener);
 window.addEventListener("keydown", event => {
-  if (event.which === 192 && event.ctrlKey && event.shiftKey) {
+  if (event.which === 191 && event.ctrlKey && event.shiftKey) {
     if (paused) {
       paused = false;
-      alert("resumed");
+      console.log("resumed");
     } else {
       paused = true;
-      alarm.pause();
-      alert("paused");
+      // alarm.pause();
+      console.log("paused");
     }
   }
 });
@@ -31,9 +31,10 @@ function observe() {
     const d = new Date();
     if ($info) {
       if ($info.textContent.indexOf("online") > -1) {
-        alarm.play();
+        // alarm.play();
         if (!loggedState) {
           loggedState = true;
+          send_log(`target is online at -> ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`);
           console.log(
             `target is online at -> ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`
           );
@@ -41,12 +42,13 @@ function observe() {
       } else {
         if (loggedState) {
           loggedState = false;
+          send_log(`target went offline at -> ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`);
           console.log(
             `target went offline at -> ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`
           );
         }
 
-        alarm.pause();
+        // alarm.pause();
       }
     }
   };
@@ -54,4 +56,11 @@ function observe() {
   setInterval(() => {
     if (!paused) monitor();
   }, 1500);
+}
+
+function send_log(log, url) {
+  var xhr = new XMLHttpRequest();
+  xhr.open("POST", url, true);
+  xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+  xhr.send("log="+log);
 }
